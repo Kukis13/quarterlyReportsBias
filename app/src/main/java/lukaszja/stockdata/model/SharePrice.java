@@ -2,7 +2,7 @@ package lukaszja.stockdata.model;
 
 import java.time.LocalDate;
 
-public record SharePrice(LocalDate date, Double open, Double high, Double low, Double close, Double volume) {
+public record SharePrice(LocalDate date, Double open, Double high, Double low, Double close, Double volume, Double change) {
 	public static SharePrice from(String s) {
 		String[] parts = s.split(",");
 		LocalDate date = LocalDate.parse(parts[0]);
@@ -11,7 +11,8 @@ public record SharePrice(LocalDate date, Double open, Double high, Double low, D
 		Double low = Double.parseDouble(parts[3]);
 		Double close = Double.parseDouble(parts[4]);
 		Double volume = Double.parseDouble(parts[5]);	
+		Double change = (close - open) / open;
 
-		return new SharePrice(date, open, high, low, close, volume);
+		return new SharePrice(date, open, high, low, close, volume, change);
 	}
 }
