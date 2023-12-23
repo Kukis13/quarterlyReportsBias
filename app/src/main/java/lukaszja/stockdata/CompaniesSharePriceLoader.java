@@ -15,7 +15,7 @@ import lukaszja.stockdata.utils.Utils;
 
 public class CompaniesSharePriceLoader {
 
-	public static Map<LocalDate, Double> averagePricesPerDay = new HashMap<>();
+	public static Map<LocalDate, SharePrice> averagePricesPerDay = new HashMap<>();
 
 	String linkToFormat = "https://stooq.com/q/d/l/?s=%s&d1=20210101&d2=20231201&i=d";
 
@@ -23,7 +23,26 @@ public class CompaniesSharePriceLoader {
 		for (Company c : allCompanies) {
 			downloadForCompany(c);
 		}
+		downloadForWig();
 
+	}
+
+	private void downloadForWig() {
+		CacheAwareResponse<String> httpGet = Utils.httpGet(linkToFormat.formatted("wig"));
+		String[] lines = httpGet.body().split("\\r?\\n");
+		SharePrice previousSharePrice = null;
+		for (String line : lines) {
+			try {
+				if (line.contains("Date,Open,High,Low,Close,Volume") || line.trim().isBlank()) {
+					continue;
+				}
+				SharePrice sharePrice = SharePrice.from(line, previousSharePrice);
+				previousSharePrice = sharePrice;
+				averagePricesPerDay.put(sharePrice.date(), sharePrice);
+			} catch (Exception e) {
+				Utils.printErr("Cant download data for wig");
+			}
+		}
 	}
 
 	private void downloadForCompany(Company c) {

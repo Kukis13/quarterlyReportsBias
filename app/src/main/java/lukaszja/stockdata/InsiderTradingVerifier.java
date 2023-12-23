@@ -59,16 +59,16 @@ public class InsiderTradingVerifier {
 				continue;
 			}
 			
-			Optional<Entry<LocalDate,Double>> wigChangeD0 = averagePricesPerDay.entrySet().stream()
+			Optional<Entry<LocalDate,SharePrice>> wigChangeD0 = averagePricesPerDay.entrySet().stream()
 					.filter(a -> a.getKey().equals(d0Any.get().date())).findAny();
-			Optional<Entry<LocalDate,Double>> wigChangeD1 = averagePricesPerDay.entrySet().stream()
+			Optional<Entry<LocalDate,SharePrice>> wigChangeD1 = averagePricesPerDay.entrySet().stream()
 					.filter(a -> a.getKey().equals(d1Any.get().date())).findAny();
 			
 			Double d0change = d0Any.get().change();
 			Double d1change = d1Any.get().change();
 			
-			double increaseBeforeReport = (d0change - wigChangeD0.get().getValue()) * 100;
-			double increaseAfterReport = (d1change - wigChangeD1.get().getValue()) * 100;
+			double increaseBeforeReport = (d0change - wigChangeD0.get().getValue().change()) * 100;
+			double increaseAfterReport = (d1change - wigChangeD1.get().getValue().change()) * 100;
 			
 			System.out.println(c.getBankierName() + ":" + report.quater() + ":" + report.year() + ":" + increaseBeforeReport + ":" + increaseAfterReport);
 		}
