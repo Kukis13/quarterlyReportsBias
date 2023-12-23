@@ -15,7 +15,6 @@ import lukaszja.stockdata.utils.Utils;
 
 public class CompaniesSharePriceLoader {
 
-	public static Map<LocalDate, List<Double>> allPricesPerDay = new HashMap<>();
 	public static Map<LocalDate, Double> averagePricesPerDay = new HashMap<>();
 
 	String linkToFormat = "https://stooq.com/q/d/l/?s=%s&d1=20210101&d2=20231201&i=d";
@@ -24,12 +23,6 @@ public class CompaniesSharePriceLoader {
 		for (Company c : allCompanies) {
 			downloadForCompany(c);
 		}
-		for (Entry<LocalDate, List<Double>> e : allPricesPerDay.entrySet()) {
-			int size = e.getValue().size();
-			double sum = e.getValue().stream().mapToDouble(Double::doubleValue).sum();
-			double averagePriceChange = sum / size;
-			averagePricesPerDay.put(e.getKey(), averagePriceChange);
-		}
 
 	}
 
@@ -37,18 +30,15 @@ public class CompaniesSharePriceLoader {
 		CacheAwareResponse<String> httpGet = Utils.httpGet(linkToFormat.formatted(c.getSymbol()));
 
 		String[] lines = httpGet.body().split("\\r?\\n");
+		SharePrice previousSharePrice = null;
 		for (String line : lines) {
 			try {
 				if (line.contains("Date,Open,High,Low,Close,Volume") || line.trim().isBlank()) {
 					continue;
 				}
-				SharePrice sharePrice = SharePrice.from(line);
+				SharePrice sharePrice = SharePrice.from(line, previousSharePrice);
+				previousSharePrice = sharePrice;
 				c.addSharePrice(sharePrice);
-				allPricesPerDay.computeIfAbsent(sharePrice.date(), sp -> new ArrayList());
-				allPricesPerDay.computeIfPresent(sharePrice.date(), (a, b) -> {
-					b.add(sharePrice.change());
-					return b;
-				});
 			} catch (Exception e) {
 				Utils.printErr("Cant download data for " + c.getSymbol());
 			}
